@@ -15,16 +15,22 @@ plt.rcParams['legend.title_fontsize'] = 15
 plt.rcParams['legend.fontsize'] = 13
 plt.rcParams.update({'mathtext.default': 'regular'})
 
-def MultiGauss(gmods, peak, pars, params):
-    gmods[peak] = GaussianModel(prefix=f'g{peak+1}_')
-    pars.update(gmods[peak].make_params())
-    pars[f'g{peak+1}_center'].set(
-        value=params.iloc[peak,0][0],
-        min=params.iloc[peak,0][1],
-        max=params.iloc[peak,0][2]
-    )
-    pars[f'g{peak+1}_sigma'].set(value=params.iloc[peak,1])
-    pars[f'g{peak+1}_amplitude'].set(value=params.iloc[peak,2])
+def MultiGauss(peak_n, params):
+    gmods = [GaussianModel]*peak_n
+    for i in np.arange(0,peak_n):
+        gmods[i] = GaussianModel(prefix=f'g{i+1}_')
+
+    pars=gmods[0].make_params()
+    for i in np.arange(0,peak_n):
+        pars.update(gmods[i].make_params())
+        pars[f'g{i+1}_center'].set(
+            value=params.iloc[i,0][0],
+            min=params.iloc[i,0][1],
+            max=params.iloc[i,0][2]
+        )
+        pars[f'g{i+1}_sigma'].set(value=params.iloc[i,1])
+        pars[f'g{i+1}_amplitude'].set(value=params.iloc[i,2])
+    return gmods, pars
 
 def MP_plot(
     peak_n: int,
@@ -58,42 +64,30 @@ def MP_plot(
     plt.ylabel('Counts')
     plt.title(f'{title}')
 
-    gmods = [GaussianModel]*peak_n
-    if peak_n > 0:
-        gmods[0] = GaussianModel(prefix='g1_')
-        pars=gmods[0].make_params()
-        pars['g1_center'].set(
-            value=params.iloc[0,0][0],
-            min=params.iloc[0,0][1],
-            max=params.iloc[0,0][2]
-        )
-        pars['g1_sigma'].set(value=params.iloc[0,1])
-        pars['g1_amplitude'].set(value=params.iloc[0,2])
-        if peak_n >= 1:
-            for i in np.arange(0,peak_n):
-                MultiGauss(gmods,i,pars,params)
-            model = np.sum(gmods)
-            out = model.fit(y, pars, x=x)
-            # print(out.fit_report())
+    if peak_n != 0:
+        (gmods, pars)=MultiGauss(peak_n,params)
+        model = np.sum(gmods)
+        out = model.fit(y, pars, x=x)
+        # print(out.fit_report())
 
-    for i in np.arange(0,peak_n):
-        c = out.values[f'g{i+1}_center']
-        sigma = out.values[f'g{i+1}_sigma']
-        x_ = np.arange(c-3*sigma,c+3*sigma)
-        comps=out.eval_components(x=x_)
+        for i in np.arange(0,peak_n):
+            c = out.values[f'g{i+1}_center']
+            sigma = out.values[f'g{i+1}_sigma']
+            x_ = np.arange(c-3*sigma,c+3*sigma)
+            comps=out.eval_components(x=x_)
 
-        # index_ = (
-        #     (counts.index.left >= c-3*sigma-bin_width) & 
-        #     (counts.index.right <= c+3*sigma+bin_width)
-        # )
-        # p = counts[index_].sum()/counts.sum()
+            # index_ = (
+            #     (counts.index.left >= c-3*sigma-bin_width) & 
+            #     (counts.index.right <= c+3*sigma+bin_width)
+            # )
+            # p = counts[index_].sum()/counts.sum()
 
-        p = mw[(mw>c-3*sigma) & (mw<c+3*sigma)].count()/mw.count()
-        sns.lineplot(
-            x=x_,y=comps[f'g{i+1}_'],
-            ax=ax,ls='--',lw=2,
-            label=f"MW={c:.0f}, $\sigma$={sigma:.0f}, {p:.0%}"
-        )
+            p = mw[(mw>c-3*sigma) & (mw<c+3*sigma)].count()/mw.count()
+            sns.lineplot(
+                x=x_,y=comps[f'g{i+1}_'],
+                ax=ax,ls='--',lw=2,
+                label=f"MW={c:.0f}, $\sigma$={sigma:.0f}, {p:.0%}"
+            )
 
     # sns.lineplot(x=x,y=out.best_fit,ax=ax,color='k',lw=2)
 
