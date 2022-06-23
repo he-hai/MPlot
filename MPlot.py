@@ -26,16 +26,22 @@ def MultiGauss(gmods, peak, pars, params):
     pars[f'g{peak+1}_sigma'].set(value=params.iloc[peak,1])
     pars[f'g{peak+1}_amplitude'].set(value=params.iloc[peak,2])
 
-def MP_plot(title, file_name, fig_save, bin_width, x_max, peak_n, params):
-    df = pd.read_csv(f'{file_name}\\eventsFitted.csv',comment='#')
+def MP_plot(
+    peak_n: int,
+    x_max: int,
+    fig_save: str, 
+    title: str,
+    folder_name: str,
+    params,
+    bin_width: float=6,
+):
+    df = pd.read_csv(f'{folder_name}\\eventsFitted.csv',comment='#')
     mw = df[df['masses_kDa']>0]['masses_kDa']
 
     mw_max = np.ceil(mw.max()/10)*10
-    if x_max != np.inf:
+    if x_max != np.Infinity:
         mw_max = x_max
 
-    if bin_width == 0:
-        bin_width = 6
     bins = np.arange(0,mw_max, bin_width)
 
     counts = mw.value_counts(bins=bins)
@@ -96,35 +102,38 @@ def MP_plot(title, file_name, fig_save, bin_width, x_max, peak_n, params):
         fig.savefig(f'{title}_MP.{fig_save}',bbox='tight')
     plt.show()
 # %%
+## ==*== users input ==*==
 title = 'Protein1'
 folder_name = 'Protein1'
-# fig_save = None #'png'  # None, png, eps
-# bin_width = 0 # 0 -> use default 6; otherwise defining here
-# x_max = np.inf  # right limit for x-axis: np.inf takes from the dataset
 
-# peak_n = 1  # int: 0 -> histplot only; 1~N
+peak_n = 1  # int: 0 -> histplot only; 1~N
 params = pd.DataFrame(columns=['center','sigma','amplitude'])
 # initial parameters: center_[value, min, max], sigma, amplitude
 params.loc[1,:]=[[73,60,100],10,1000]
 # params.loc[2,:]=[[40,30,50],10,1000]
 # ...
 
-# MP_plot(title, file_name, fig_save, bin_width, x_max, peak_n, params)
-MP_plot(title,folder_name,'png', 0, 500, 1, params)
+x_max = 500 # np.Infinity  # right limit for x-axis: np.Infinity takes from the dataset
+fig_save = None #'png'  # None, png, eps
+bin_width = 6   # default 6; otherwise defining here
+
+# MP_plot(peak_n, x_max, fig_save, title, folder_name, params, bin_width)
+MP_plot(peak_n,x_max,fig_save,title,folder_name,params,bin_width)
 
 # %%
+## ==*== users input ==*==
 title = 'Protein2'
-file_name = 'Protein2_1.5x'
-fig_save = None #'png'  # None, png, eps
-bin_width = 0 # 0 -> use default 6; otherwise defining here
-x_max = np.inf  # right limit for x-axis: np.inf takes from the dataset
+folder_name = 'Protein2_1.5x'
 
-peak_n = 1  # int: 0 -> histplot only; 1~N
+peak_n = 2  # int: 0 -> histplot only; 1~N
 params = pd.DataFrame(columns=['center','sigma','amplitude'])
 # initial parameters: center_[value, min, max], sigma, amplitude
 params.loc[1,:]=[[50,30,80],10,1000]
 params.loc[2,:]=[[112,100,124],10,1000]
-
 # ...
-# MP_plot(title, file_name, fig_save, bin_width, x_max, peak_n, params)
-MP_plot(title,file_name,'png',0,500,2,params)
+
+x_max = 500 # np.Infinity  # right limit for x-axis: np.Infinity takes from the dataset
+fig_save = None #'png'  # None, png, eps
+bin_width = 6  # default 6; otherwise defining here
+# MP_plot(peak_n, x_max, fig_save, title, folder_name, params, bin_width)
+MP_plot(peak_n,x_max,fig_save,title,folder_name,params,bin_width)
