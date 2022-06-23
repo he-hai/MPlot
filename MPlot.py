@@ -48,8 +48,6 @@ def MP_plot(
     x = counts.index.mid
     y = counts.to_numpy()
 
-    gmods = [GaussianModel]*peak_n
-
     fig, ax = plt.subplots(figsize=(8,6))
     sns.histplot(
         data=mw, ax=ax, binwidth=bin_width,
@@ -60,6 +58,7 @@ def MP_plot(
     plt.ylabel('Counts')
     plt.title(f'{title}')
 
+    gmods = [GaussianModel]*peak_n
     if peak_n > 0:
         gmods[0] = GaussianModel(prefix='g1_')
         pars=gmods[0].make_params()
@@ -77,24 +76,24 @@ def MP_plot(
             out = model.fit(y, pars, x=x)
             # print(out.fit_report())
 
-            for i in np.arange(0,peak_n):
-                c = out.values[f'g{i+1}_center']
-                sigma = out.values[f'g{i+1}_sigma']
-                x_ = np.arange(c-3*sigma,c+3*sigma)
-                comps=out.eval_components(x=x_)
+    for i in np.arange(0,peak_n):
+        c = out.values[f'g{i+1}_center']
+        sigma = out.values[f'g{i+1}_sigma']
+        x_ = np.arange(c-3*sigma,c+3*sigma)
+        comps=out.eval_components(x=x_)
 
-                # index_ = (
-                #     (counts.index.left >= c-3*sigma-bin_width) & 
-                #     (counts.index.right <= c+3*sigma+bin_width)
-                # )
-                # p = counts[index_].sum()/counts.sum()
+        # index_ = (
+        #     (counts.index.left >= c-3*sigma-bin_width) & 
+        #     (counts.index.right <= c+3*sigma+bin_width)
+        # )
+        # p = counts[index_].sum()/counts.sum()
 
-                p = mw[(mw>c-3*sigma) & (mw<c+3*sigma)].count()/mw.count()
-                sns.lineplot(
-                    x=x_,y=comps[f'g{i+1}_'],
-                    ax=ax,ls='--',lw=2,
-                    label=f"MW={c:.0f}, $\sigma$={sigma:.0f}, {p:.0%}"
-                )
+        p = mw[(mw>c-3*sigma) & (mw<c+3*sigma)].count()/mw.count()
+        sns.lineplot(
+            x=x_,y=comps[f'g{i+1}_'],
+            ax=ax,ls='--',lw=2,
+            label=f"MW={c:.0f}, $\sigma$={sigma:.0f}, {p:.0%}"
+        )
 
     # sns.lineplot(x=x,y=out.best_fit,ax=ax,color='k',lw=2)
 
