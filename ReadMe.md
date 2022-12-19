@@ -1,6 +1,6 @@
 `MPlot.py` is a python script for ploting data from Mass Photometry (Refeyn).  
 
-The repository contains also demos.  
+The script uses [lmfit](https://lmfit.github.io/lmfit-py/model.html) for curve non-linear fitting. This repository contains also demos.  
 
 The script has been tested in an environment with following packages:  
 - python 3.8.2
